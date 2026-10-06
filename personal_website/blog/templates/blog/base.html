@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ideas, proyectos y experiencias de Valentin Martinez.">
+    <title>{% block title %}Blog | Valentin Martinez{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'blog/blog.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header class="site-header">
+        <nav class="navigation" aria-label="Navegación principal">
+            <a class="brand" href="{% url 'portfolio:index' %}">VM<span>.</span></a>
+            <div class="navigation-links">
+                <a href="{% url 'portfolio:index' %}">Portfolio</a>
+                <a class="current" href="{% url 'blog:index' %}">Blog</a>
+            </div>
+        </nav>
+    </header>
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+        <p>© 2026 Valentin Martinez</p>
+        <a href="{% url 'portfolio:index' %}">Volver al portfolio</a>
+    </footer>
+</body>
+</html>
