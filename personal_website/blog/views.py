@@ -6,7 +6,7 @@ from .models import Post
 
 def index(request):
     posts = Post.objects.all()
-    return render(request, 'blog/index.html', {'posts': posts})
+    return render(request, 'blog/blog.html', {'posts': posts})
 
 
 def detail(request, slug):
@@ -19,4 +19,4 @@ def detail(request, slug):
         comment.save()
         return redirect(post.get_absolute_url() + '#comentarios')
 
-    return render(request, 'blog/detail.html', {'post': post, 'form': form})
+    return render(request, 'blog/blog.html', {'post': post, 'form': form})

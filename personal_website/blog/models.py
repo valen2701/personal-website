@@ -1,3 +1,5 @@
+import mimetypes
+
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -16,6 +18,10 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def media_content_type(self):
+        return mimetypes.guess_type(self.media.name)[0] or ''
 
     def get_absolute_url(self):
         return reverse('blog:detail', kwargs={'slug': self.slug})

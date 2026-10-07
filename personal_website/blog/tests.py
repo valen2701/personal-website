@@ -26,6 +26,8 @@ class BlogTests(TestCase):
         response = self.client.get(reverse('blog:index'))
 
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'blog/blog.html')
+        self.assertContains(response, 'href="/static/styles.css"')
         self.assertContains(response, 'href="/static/blog/blog.css"')
 
     def test_index_shows_posts_in_reverse_chronological_order(self):
@@ -36,13 +38,16 @@ class BlogTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.context['posts']), [newer, older])
+        self.assertContains(response, '<img class="post-image"')
 
     def test_detail_accepts_a_comment_for_that_post(self):
         post = self.create_post('Mi entrada', 'mi-entrada', '2026-10-01T12:00:00Z')
 
         detail_response = self.client.get(post.get_absolute_url())
         self.assertEqual(detail_response.status_code, 200)
-        self.assertContains(detail_response, 'href="/media/blog/imagen.jpg"')
+        self.assertTemplateUsed(detail_response, 'blog/blog.html')
+        self.assertContains(detail_response, 'src="/media/blog/imagen.jpg"')
+        self.assertContains(detail_response, '<img class="article-image"')
 
         response = self.client.post(
             reverse('blog:detail', kwargs={'slug': post.slug}),
@@ -64,3 +69,20 @@ class BlogTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['form'].errors)
         self.assertEqual(Comment.objects.count(), 0)
+
+    def test_detail_embeds_video_media(self):
+        post = self.create_post('Video', 'video', '2026-10-01T12:00:00Z')
+        post.media = 'blog/video.mp4'
+        post.save()
+
+        response = self.client.get(post.get_absolute_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<video class="article-video" controls')
+        self.assertContains(response, 'type="video/mp4"')
+
+    def test_only_staff_can_open_post_creation_in_admin(self):
+        response = self.client.get('/admin/blog/post/add/')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/admin/login/', response['Location'])
