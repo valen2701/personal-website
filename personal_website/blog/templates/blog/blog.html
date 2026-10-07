@@ -84,6 +84,14 @@
                             <div class="comment-meta">
                                 <strong>{{ comment.author_name }}</strong>
                                 <time datetime="{{ comment.created_at|date:'c' }}">{{ comment.created_at|date:"d/m/Y H:i" }}</time>
+                                {% if user.is_superuser %}
+                                    <form class="delete-comment-form" method="post" action="{% url 'blog:delete_comment' comment.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="delete-comment-button" aria-label="Eliminar comentario de {{ comment.author_name }}">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
                             </div>
                             <p>{{ comment.body|linebreaksbr }}</p>
                         </article>

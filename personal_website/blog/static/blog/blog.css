@@ -341,6 +341,28 @@ textarea:focus-visible {
     font-size: 0.82rem;
 }
 
+.delete-comment-form {
+    margin-left: auto;
+}
+
+.delete-comment-button {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid var(--blog-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--blog-muted);
+    cursor: pointer;
+    transition: color 180ms ease, border-color 180ms ease;
+}
+
+.delete-comment-button:hover {
+    border-color: #f87171;
+    color: #f87171;
+}
+
 .comment p {
     margin: 8px 0 0;
     color: var(--blog-content);

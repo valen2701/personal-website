@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
@@ -86,3 +87,62 @@ class BlogTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertIn('/admin/login/', response['Location'])
+
+    def test_superuser_can_delete_a_comment_from_the_blog(self):
+        post = self.create_post('Mi entrada', 'mi-entrada', '2026-10-01T12:00:00Z')
+        comment = Comment.objects.create(
+            post=post,
+            author_name='Valeria',
+            body='Comentario para borrar',
+        )
+        admin = get_user_model().objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='test-password',
+        )
+        self.client.force_login(admin)
+
+        detail_response = self.client.get(post.get_absolute_url())
+        response = self.client.post(
+            reverse('blog:delete_comment', kwargs={'comment_id': comment.pk}),
+        )
+
+        self.assertContains(detail_response, 'Eliminar comentario de Valeria')
+        self.assertRedirects(response, f'{post.get_absolute_url()}#comentarios')
+        self.assertFalse(Comment.objects.filter(pk=comment.pk).exists())
+
+    def test_non_admin_cannot_delete_a_comment(self):
+        post = self.create_post('Mi entrada', 'mi-entrada', '2026-10-01T12:00:00Z')
+        comment = Comment.objects.create(
+            post=post,
+            author_name='Valeria',
+            body='Comentario protegido',
+        )
+
+        response = self.client.post(
+            reverse('blog:delete_comment', kwargs={'comment_id': comment.pk}),
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Comment.objects.filter(pk=comment.pk).exists())
+
+    def test_comment_deletion_requires_post(self):
+        post = self.create_post('Mi entrada', 'mi-entrada', '2026-10-01T12:00:00Z')
+        comment = Comment.objects.create(
+            post=post,
+            author_name='Valeria',
+            body='Comentario protegido',
+        )
+        admin = get_user_model().objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='test-password',
+        )
+        self.client.force_login(admin)
+
+        response = self.client.get(
+            reverse('blog:delete_comment', kwargs={'comment_id': comment.pk}),
+        )
+
+        self.assertEqual(response.status_code, 405)
+        self.assertTrue(Comment.objects.filter(pk=comment.pk).exists())
