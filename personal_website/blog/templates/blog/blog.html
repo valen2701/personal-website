@@ -31,6 +31,24 @@
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         <li class="nav-item"><a class="nav-link" href="{% url 'portfolio:index' %}">Portfolio</a></li>
                         <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'blog:index' %}">Blog</a></li>
+                        <li class="nav-item auth-nav-item">
+                            {% if user.is_authenticated %}
+                                <form class="auth-logout-form" method="post" action="{% url 'logout' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <span class="auth-user">Hola, {{ user.get_username }}</span>
+                                    <button class="auth-link" type="submit">
+                                        <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                                        Cerrar sesión
+                                    </button>
+                                </form>
+                            {% else %}
+                                <a class="auth-link" href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">
+                                    <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
+                                    Iniciar sesión
+                                </a>
+                            {% endif %}
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -52,6 +70,7 @@
                             data-like-url="{% url 'blog:toggle_post_like' post.pk %}"
                             data-like-label="post"
                             {% if not user.is_authenticated %}data-require-login="true"{% endif %}
+                            data-login-url="{% url 'login' %}?next={{ request.get_full_path|urlencode }}"
                         >
                             <span aria-hidden="true">❤️</span>
                             <span class="like-count">{{ post.likes.count }}</span>
@@ -115,6 +134,7 @@
                                     data-like-url="{% url 'blog:toggle_comment_like' comment.pk %}"
                                     data-like-label="comment"
                                     {% if not user.is_authenticated %}data-require-login="true"{% endif %}
+                                    data-login-url="{% url 'login' %}?next={{ request.get_full_path|urlencode }}"
                                 >
                                     <span aria-hidden="true">❤️</span>
                                     <span class="like-count">{{ comment.likes.count }}</span>
@@ -235,7 +255,7 @@
         document.querySelectorAll('.like-button').forEach((button) => {
             button.addEventListener('click', async () => {
                 if (button.dataset.requireLogin === 'true') {
-                    window.location.href = '/admin/login/?next=' + encodeURIComponent(window.location.pathname);
+                    window.location.href = button.dataset.loginUrl;
                     return;
                 }
 

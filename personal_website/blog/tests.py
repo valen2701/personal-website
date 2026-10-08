@@ -15,7 +15,7 @@ class BlogTests(TestCase):
             slug=slug,
             excerpt=f'Introducción a {title}',
             content=f'Contenido de {title}',
-            media='blog/imagen.jpg',
+            media='img/imagen.jpg',
             published_at=published_at,
             category=category,
         )
@@ -26,6 +26,71 @@ class BlogTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'href="/blog/">Blog</a>')
         self.assertContains(response, 'href="/static/styles.css"')
+        self.assertContains(response, 'href="/accounts/login/?next=/">')
+
+    def test_blog_navigation_links_to_the_portfolio_and_login(self):
+        response = self.client.get(reverse('blog:index'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'href="/accounts/login/?next=/blog/">')
+
+    def test_authenticated_navigation_offers_post_logout_on_both_pages(self):
+        user = get_user_model().objects.create_user(
+            username='lector',
+            password='test-password',
+        )
+        self.client.force_login(user)
+
+        for url, next_url in (
+            (reverse('portfolio:index'), '/'),
+            (reverse('blog:index'), '/blog/'),
+        ):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+
+                self.assertContains(response, 'action="/accounts/logout/"')
+                self.assertContains(response, f'value="{next_url}"')
+                self.assertContains(response, 'name="csrfmiddlewaretoken"')
+
+    def test_login_authenticates_user_and_returns_to_requested_page(self):
+        user = get_user_model().objects.create_user(
+            username='lector',
+            password='test-password',
+        )
+
+        response = self.client.post(
+            reverse('login'),
+            {'username': 'lector', 'password': 'test-password', 'next': '/blog/'},
+        )
+
+        self.assertRedirects(response, '/blog/')
+        self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
+
+    def test_logout_ends_session_and_returns_to_requested_page(self):
+        user = get_user_model().objects.create_user(
+            username='lector',
+            password='test-password',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(reverse('logout'), {'next': '/blog/'})
+
+        self.assertRedirects(response, '/blog/')
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_logout_rejects_external_redirect(self):
+        user = get_user_model().objects.create_user(
+            username='lector',
+            password='test-password',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('logout'),
+            {'next': 'https://example.com/'},
+        )
+
+        self.assertRedirects(response, reverse('portfolio:index'))
 
     def test_blog_page_uses_root_static_url_and_renders(self):
         response = self.client.get(reverse('blog:index'))
@@ -38,7 +103,7 @@ class BlogTests(TestCase):
     def test_post_media_is_stored_inside_blog_static_folder(self):
         self.assertEqual(settings.MEDIA_ROOT, Path(settings.BASE_DIR) / 'blog' / 'static')
         self.assertEqual(settings.MEDIA_URL, '/media/')
-        self.assertEqual(Post._meta.get_field('media').upload_to, 'blog/')
+        self.assertEqual(Post._meta.get_field('media').upload_to, 'img/')
 
     def test_index_shows_posts_in_reverse_chronological_order(self):
         older = self.create_post('Entrada vieja', 'entrada-vieja', '2026-09-01T12:00:00Z')
@@ -81,7 +146,7 @@ class BlogTests(TestCase):
         detail_response = self.client.get(post.get_absolute_url())
         self.assertEqual(detail_response.status_code, 200)
         self.assertTemplateUsed(detail_response, 'blog/blog.html')
-        self.assertContains(detail_response, 'src="/media/blog/imagen.jpg"')
+        self.assertContains(detail_response, 'src="/media/img/imagen.jpg"')
         self.assertContains(detail_response, '<img class="article-image"')
 
         response = self.client.post(
@@ -107,7 +172,7 @@ class BlogTests(TestCase):
 
     def test_detail_embeds_video_media(self):
         post = self.create_post('Video', 'video', '2026-10-01T12:00:00Z')
-        post.media = 'blog/video.mp4'
+        post.media = 'img/video.mp4'
         post.save()
 
         response = self.client.get(post.get_absolute_url())

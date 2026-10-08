@@ -45,6 +45,25 @@
                         <a class="nav-link" href="#contacto">Contact</a>
                     </li>
 
+                    <li class="nav-item auth-nav-item">
+                        {% if user.is_authenticated %}
+                            <form class="auth-logout-form" method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <span class="auth-user">Hi, {{ user.get_username }}</span>
+                                <button class="auth-link" type="submit">
+                                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                                    Sign out
+                                </button>
+                            </form>
+                        {% else %}
+                            <a class="auth-link" href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">
+                                <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
+                                Sign in
+                            </a>
+                        {% endif %}
+                    </li>
+
                 </ul>
             </div>
 

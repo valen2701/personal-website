@@ -19,7 +19,7 @@ class Post(models.Model):
     excerpt = models.CharField(max_length=300)
     content = models.TextField()
     category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
-    media = models.FileField(upload_to='blog/')
+    media = models.FileField(upload_to='img/')
     published_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
