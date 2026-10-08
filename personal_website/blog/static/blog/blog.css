@@ -57,10 +57,6 @@ textarea:focus-visible {
     margin-inline: auto;
 }
 
-.intro h1 span,
-.article-header h1 span {
-    color: var(--blog-accent);
-}
 
 .page-content {
     min-height: calc(100vh - 150px);

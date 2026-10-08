@@ -20,11 +20,13 @@ from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
 
+from portfolio.views import login_view
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path(
         'accounts/login/',
-        auth_views.LoginView.as_view(template_name='registration/login.html'),
+        login_view,
         name='login',
     ),
     path(

@@ -16,7 +16,7 @@
 </head>
 <body>
     <header class="site-header">
-        <nav class="navbar navbar-expand-lg fixed-top" aria-label="Navegación principal">
+        <nav class="navbar navbar-expand-lg fixed-top" aria-label="Navegacion principal">
             <div class="container">
                 <a class="navbar-brand" href="{% url 'portfolio:index' %}" aria-label="Volver al portfolio">
                     <img src="{% static 'img/logo.png' %}" alt="Logo VM" class="logo-navbar">
@@ -24,7 +24,7 @@
                 <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar modo claro/oscuro">
                     <i class="fa-solid fa-sun" aria-hidden="true"></i>
                 </button>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#blogNavigation" aria-controls="blogNavigation" aria-expanded="false" aria-label="Abrir menú">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#blogNavigation" aria-controls="blogNavigation" aria-expanded="false" aria-label="Abrir menu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="blogNavigation">
@@ -39,13 +39,13 @@
                                     <span class="auth-user">Hola, {{ user.get_username }}</span>
                                     <button class="auth-link" type="submit">
                                         <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
-                                        Cerrar sesión
+                                        Cerrar sesion
                                     </button>
                                 </form>
                             {% else %}
                                 <a class="auth-link" href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">
                                     <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
-                                    Iniciar sesión
+                                    Iniciar sesion
                                 </a>
                             {% endif %}
                         </li>
@@ -60,7 +60,7 @@
                 <a class="back-link" href="{% url 'blog:index' %}">← Todas las entradas</a>
                 <header class="article-header">
                     <p class="eyebrow">{{ post.published_at|date:"d/m/Y" }}</p>
-                    <h1>{{ post.title }}<span>.</span></h1>
+                    <h1>{{ post.title }}</h1>
                     <p class="article-excerpt">{{ post.excerpt }}</p>
                     <div class="article-like-row">
                         {% csrf_token %}
@@ -108,7 +108,7 @@
 
             <section class="comments" id="comentarios">
                 <div class="comments-heading">
-                    <p class="eyebrow">CONVERSACIÓN</p>
+                    <p class="eyebrow">CONVERSACION</p>
                     <h2>Comentarios <span>({{ post.comments.count }})</span></h2>
                 </div>
                 <div class="comment-list">
@@ -142,13 +142,13 @@
                             </div>
                         </article>
                     {% empty %}
-                        <p class="no-comments">Todavía no hay comentarios. ¡Sé el primero en dejar uno!</p>
+                        <p class="no-comments">Todavia no hay comentarios. Rompe el hielo y se el primero en comentar</p>
                     {% endfor %}
                 </div>
 
                 <form class="comment-form" method="post">
                     {% csrf_token %}
-                    <h3>Dejá tu comentario</h3>
+                    <h3>Deja tu comentario</h3>
                     {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
                     <div class="form-field">
                         <label for="{{ form.author_name.id_for_label }}">Tu nombre</label>
@@ -165,15 +165,15 @@
             </section>
         {% else %}
             <section class="intro">
-                <p class="eyebrow">IDEAS, PROYECTOS Y EXPERIENCIAS</p>
-                <h1>Mi blog<span>.</span></h1>
-                <p class="intro-copy">Un espacio para compartir lo que voy aprendiendo, creando y descubriendo.</p>
+                <p class="eyebrow">IDEAS, PROYECTOS FUTUROS (y otras cosas)</p>
+                <h1>Mi blog</h1>
+                <p class="intro-copy">Aca muestro lo que voy aprendiendo, creando y mis experiencias .</p>
                 {% if user.is_superuser %}
                     <div class="admin-notice">
                         <i class="fa-solid fa-shield-halved"></i>
                         <div>
                             <strong>Modo administrador</strong>
-                            <span> Puedes crear y eliminar publicaciones o comentarios desde el panel de administración.</span>
+                            <span> Podes crear y eliminar publicaciones o comentarios desde el panel de administracion.</span>
                         </div>
                         <a href="{% url 'admin:blog_post_changelist' %}">Administrar publicaciones</a>
                     </div>
@@ -182,20 +182,20 @@
                     {% csrf_token %}
                     <label for="order-select">Ordenar publicaciones</label>
                     <select id="order-select" onchange="window.location.href = this.value">
-                        <option value="{% url 'blog:index' %}?order=newest" {% if order == 'newest' %}selected{% endif %}>Más nuevos</option>
-                        <option value="{% url 'blog:index' %}?order=oldest" {% if order == 'oldest' %}selected{% endif %}>Más viejos</option>
-                        <option value="{% url 'blog:index' %}?order=most_liked" {% if order == 'most_liked' %}selected{% endif %}>Más likeados</option>
+                        <option value="{% url 'blog:index' %}?order=newest" {% if order == 'newest' %}selected{% endif %}>Mas nuevos</option>
+                        <option value="{% url 'blog:index' %}?order=oldest" {% if order == 'oldest' %}selected{% endif %}>Mas viejos</option>
+                        <option value="{% url 'blog:index' %}?order=most_liked" {% if order == 'most_liked' %}selected{% endif %}>Mas likeados</option>
                     </select>
                 </div>
             </section>
 
-            <section class="category-sections" aria-label="Entradas organizadas por categoría">
+            <section class="category-sections" aria-label="Entradas organizadas por categoria">
                 {% for group in category_groups %}
                     {% if group.posts %}
                         <section class="category-section" id="categoria-{{ group.name|cut:' ' }}">
                             <header class="category-heading">
                                 <div>
-                                    <p class="eyebrow">SECCIÓN</p>
+                                    <p class="eyebrow">SECCION</p>
                                     <h2>{{ group.name|title }}</h2>
                                 </div>
                                 <span>{{ group.posts|length }} {{ group.posts|length|pluralize:"entrada,entradas" }}</span>
@@ -222,6 +222,7 @@
                                                 data-like-url="{% url 'blog:toggle_post_like' post.pk %}"
                                                 data-like-label="post"
                                                 {% if not user.is_authenticated %}data-require-login="true"{% endif %}
+                                                data-login-url="{% url 'login' %}?next={{ request.get_full_path|urlencode }}"
                                             >
                                                 <span aria-hidden="true">❤️</span>
                                                 <span class="like-count">{{ post.likes.count }}</span>
@@ -255,14 +256,15 @@
         document.querySelectorAll('.like-button').forEach((button) => {
             button.addEventListener('click', async () => {
                 if (button.dataset.requireLogin === 'true') {
-                    window.location.href = button.dataset.loginUrl;
+                    window.location.href = button.dataset.loginUrl || '{% url "login" %}?next={{ request.get_full_path|urlencode }}';
                     return;
                 }
 
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
                 const response = await fetch(button.dataset.likeUrl, {
                     method: 'POST',
                     headers: {
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'X-CSRFToken': csrfToken ? csrfToken.value : '',
                         'Content-Type': 'application/json',
                     },
                 });
@@ -270,7 +272,10 @@
                 if (!response.ok) return;
                 const result = await response.json();
                 button.classList.toggle('liked', result.liked);
-                button.querySelector('.like-count').textContent = result.likes_count;
+                const countNode = button.querySelector('.like-count');
+                if (countNode) {
+                    countNode.textContent = result.likes_count;
+                }
             });
         });
     </script>

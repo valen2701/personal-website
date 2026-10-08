@@ -50,7 +50,7 @@
                             <form class="auth-logout-form" method="post" action="{% url 'logout' %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                <span class="auth-user">Hi, {{ user.get_username }}</span>
+                                <span class="auth-user">Hola, {{ user.get_username }}</span>
                                 <button class="auth-link" type="submit">
                                     <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
                                     Sign out

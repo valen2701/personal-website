@@ -66,6 +66,16 @@ class BlogTests(TestCase):
         self.assertRedirects(response, '/blog/')
         self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
 
+    def test_login_creates_a_new_user_when_it_does_not_exist(self):
+        response = self.client.post(
+            reverse('login'),
+            {'username': 'nuevo-lector', 'password': 'test-password', 'next': '/blog/'},
+        )
+
+        self.assertRedirects(response, '/blog/')
+        self.assertTrue(get_user_model().objects.filter(username='nuevo-lector').exists())
+        self.assertEqual(int(self.client.session['_auth_user_id']), get_user_model().objects.get(username='nuevo-lector').pk)
+
     def test_logout_ends_session_and_returns_to_requested_page(self):
         user = get_user_model().objects.create_user(
             username='lector',
