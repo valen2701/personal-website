@@ -1,12 +1,15 @@
+from pathlib import Path
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Comment, Post
+from .models import Comment, CommentLike, Post, PostLike
 
 
 class BlogTests(TestCase):
-    def create_post(self, title, slug, published_at):
+    def create_post(self, title, slug, published_at, category='desarrollo web'):
         return Post.objects.create(
             title=title,
             slug=slug,
@@ -14,6 +17,7 @@ class BlogTests(TestCase):
             content=f'Contenido de {title}',
             media='blog/imagen.jpg',
             published_at=published_at,
+            category=category,
         )
 
     def test_portfolio_navigation_links_to_the_blog(self):
@@ -31,6 +35,11 @@ class BlogTests(TestCase):
         self.assertContains(response, 'href="/static/styles.css"')
         self.assertContains(response, 'href="/static/blog/blog.css"')
 
+    def test_post_media_is_stored_inside_blog_static_folder(self):
+        self.assertEqual(settings.MEDIA_ROOT, Path(settings.BASE_DIR) / 'blog' / 'static')
+        self.assertEqual(settings.MEDIA_URL, '/media/')
+        self.assertEqual(Post._meta.get_field('media').upload_to, 'blog/')
+
     def test_index_shows_posts_in_reverse_chronological_order(self):
         older = self.create_post('Entrada vieja', 'entrada-vieja', '2026-09-01T12:00:00Z')
         newer = self.create_post('Entrada nueva', 'entrada-nueva', '2026-10-01T12:00:00Z')
@@ -40,6 +49,31 @@ class BlogTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.context['posts']), [newer, older])
         self.assertContains(response, '<img class="post-image"')
+
+    def test_index_groups_posts_by_category(self):
+        self.create_post('Deporte', 'deporte', '2026-10-01T12:00:00Z', 'deportes')
+        self.create_post('Comida', 'comida', '2026-10-02T12:00:00Z', 'comida')
+
+        response = self.client.get(reverse('blog:index'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['categories']), ['deportes', 'comida', 'desarrollo web', 'gaming'])
+        self.assertContains(response, 'Deporte')
+        self.assertContains(response, 'Comida')
+        self.assertContains(response, 'id="categoria-deportes"')
+        self.assertContains(response, 'id="categoria-comida"')
+
+    def test_post_category_is_required(self):
+        self.assertIn('category', [field.name for field in Post._meta.fields])
+        self.assertEqual(
+            Post._meta.get_field('category').choices,
+            [
+                ('deportes', 'Deportes'),
+                ('comida', 'Comida'),
+                ('desarrollo web', 'Desarrollo web'),
+                ('gaming', 'Gaming'),
+            ],
+        )
 
     def test_detail_accepts_a_comment_for_that_post(self):
         post = self.create_post('Mi entrada', 'mi-entrada', '2026-10-01T12:00:00Z')
@@ -87,6 +121,19 @@ class BlogTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertIn('/admin/login/', response['Location'])
+
+    def test_superuser_sees_admin_link_from_the_blog(self):
+        admin = get_user_model().objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='test-password',
+        )
+        self.client.force_login(admin)
+
+        response = self.client.get(reverse('blog:index'))
+
+        self.assertContains(response, 'Administrar publicaciones')
+        self.assertContains(response, '/admin/blog/post/')
 
     def test_superuser_can_delete_a_comment_from_the_blog(self):
         post = self.create_post('Mi entrada', 'mi-entrada', '2026-10-01T12:00:00Z')
@@ -146,3 +193,93 @@ class BlogTests(TestCase):
 
         self.assertEqual(response.status_code, 405)
         self.assertTrue(Comment.objects.filter(pk=comment.pk).exists())
+
+    def test_authenticated_user_can_like_and_unlike_a_post(self):
+        post = self.create_post('Post con like', 'post-con-like', '2026-10-01T12:00:00Z')
+        user = get_user_model().objects.create_user(
+            username='lector',
+            email='lector@example.com',
+            password='test-password',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(reverse('blog:toggle_post_like', args=[post.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['liked'])
+        self.assertEqual(response.json()['likes_count'], 1)
+        self.assertTrue(PostLike.objects.filter(post=post, user=user).exists())
+
+        response = self.client.post(reverse('blog:toggle_post_like', args=[post.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['liked'])
+        self.assertEqual(response.json()['likes_count'], 0)
+        self.assertFalse(PostLike.objects.filter(post=post, user=user).exists())
+
+    def test_anonymous_user_cannot_like_a_post(self):
+        post = self.create_post('Post protegido', 'post-protegido', '2026-10-01T12:00:00Z')
+
+        response = self.client.post(reverse('blog:toggle_post_like', args=[post.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response['Location'])
+        self.assertFalse(PostLike.objects.exists())
+
+    def test_authenticated_user_can_like_and_unlike_a_comment(self):
+        post = self.create_post('Post con comentario', 'post-con-comentario', '2026-10-01T12:00:00Z')
+        comment = Comment.objects.create(
+            post=post,
+            author_name='Valeria',
+            body='Comentario interesante',
+        )
+        user = get_user_model().objects.create_user(
+            username='lector2',
+            email='lector2@example.com',
+            password='test-password',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(reverse('blog:toggle_comment_like', args=[comment.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['liked'])
+        self.assertEqual(response.json()['likes_count'], 1)
+        self.assertTrue(CommentLike.objects.filter(comment=comment, user=user).exists())
+
+        response = self.client.post(reverse('blog:toggle_comment_like', args=[comment.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['liked'])
+        self.assertEqual(response.json()['likes_count'], 0)
+        self.assertFalse(CommentLike.objects.filter(comment=comment, user=user).exists())
+
+    def test_like_unique_constraints_prevent_duplicates(self):
+        post = self.create_post('Post único', 'post-unico', '2026-10-01T12:00:00Z')
+        user = get_user_model().objects.create_user(
+            username='lector3',
+            email='lector3@example.com',
+            password='test-password',
+        )
+        PostLike.objects.create(post=post, user=user)
+
+        with self.assertRaises(Exception):
+            PostLike.objects.create(post=post, user=user)
+
+    def test_blog_order_can_sort_posts_by_newest_oldest_and_likes(self):
+        old_post = self.create_post('Más viejo', 'mas-viejo', '2026-09-01T12:00:00Z')
+        new_post = self.create_post('Más nuevo', 'mas-nuevo', '2026-10-01T12:00:00Z')
+        user = get_user_model().objects.create_user(
+            username='lector4',
+            email='lector4@example.com',
+            password='test-password',
+        )
+        PostLike.objects.create(post=old_post, user=user)
+
+        newest = self.client.get(reverse('blog:index'), {'order': 'newest'})
+        oldest = self.client.get(reverse('blog:index'), {'order': 'oldest'})
+        liked = self.client.get(reverse('blog:index'), {'order': 'most_liked'})
+
+        self.assertEqual(list(newest.context['posts'])[:1], [new_post])
+        self.assertEqual(list(oldest.context['posts'])[:1], [old_post])
+        self.assertEqual(list(liked.context['posts'])[:1], [old_post])

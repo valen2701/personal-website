@@ -44,6 +44,20 @@
                     <p class="eyebrow">{{ post.published_at|date:"d/m/Y" }}</p>
                     <h1>{{ post.title }}<span>.</span></h1>
                     <p class="article-excerpt">{{ post.excerpt }}</p>
+                    <div class="article-like-row">
+                        {% csrf_token %}
+                        <button
+                            class="like-button {% if post.pk in user_post_likes %}liked{% endif %}"
+                            type="button"
+                            data-like-url="{% url 'blog:toggle_post_like' post.pk %}"
+                            data-like-label="post"
+                            {% if not user.is_authenticated %}data-require-login="true"{% endif %}
+                        >
+                            <span aria-hidden="true">❤️</span>
+                            <span class="like-count">{{ post.likes.count }}</span>
+                            <span class="like-text">Like</span>
+                        </button>
+                    </div>
                 </header>
                 <div class="article-body">{{ post.content|linebreaks }}</div>
                 <div class="post-media">
@@ -94,6 +108,18 @@
                                 {% endif %}
                             </div>
                             <p>{{ comment.body|linebreaksbr }}</p>
+                            <div class="comment-actions">
+                                <button
+                                    class="like-button comment-like-button {% if comment.pk in user_comment_likes %}liked{% endif %}"
+                                    type="button"
+                                    data-like-url="{% url 'blog:toggle_comment_like' comment.pk %}"
+                                    data-like-label="comment"
+                                    {% if not user.is_authenticated %}data-require-login="true"{% endif %}
+                                >
+                                    <span aria-hidden="true">❤️</span>
+                                    <span class="like-count">{{ comment.likes.count }}</span>
+                                </button>
+                            </div>
                         </article>
                     {% empty %}
                         <p class="no-comments">Todavía no hay comentarios. ¡Sé el primero en dejar uno!</p>
@@ -122,27 +148,70 @@
                 <p class="eyebrow">IDEAS, PROYECTOS Y EXPERIENCIAS</p>
                 <h1>Mi blog<span>.</span></h1>
                 <p class="intro-copy">Un espacio para compartir lo que voy aprendiendo, creando y descubriendo.</p>
+                {% if user.is_superuser %}
+                    <div class="admin-notice">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <div>
+                            <strong>Modo administrador</strong>
+                            <span> Puedes crear y eliminar publicaciones o comentarios desde el panel de administración.</span>
+                        </div>
+                        <a href="{% url 'admin:blog_post_changelist' %}">Administrar publicaciones</a>
+                    </div>
+                {% endif %}
+                <div class="order-panel">
+                    {% csrf_token %}
+                    <label for="order-select">Ordenar publicaciones</label>
+                    <select id="order-select" onchange="window.location.href = this.value">
+                        <option value="{% url 'blog:index' %}?order=newest" {% if order == 'newest' %}selected{% endif %}>Más nuevos</option>
+                        <option value="{% url 'blog:index' %}?order=oldest" {% if order == 'oldest' %}selected{% endif %}>Más viejos</option>
+                        <option value="{% url 'blog:index' %}?order=most_liked" {% if order == 'most_liked' %}selected{% endif %}>Más likeados</option>
+                    </select>
+                </div>
             </section>
 
-            <section class="post-list" aria-label="Entradas del blog">
-                {% for post in posts %}
-                    <article class="post-card">
-                        {% if post.media_content_type|slice:":5" == "image" %}
-                            <a class="post-image-link" href="{{ post.get_absolute_url }}" tabindex="-1" aria-hidden="true">
-                                <img class="post-image" src="{{ post.media.url }}" alt="" loading="lazy">
-                            </a>
-                        {% endif %}
-                        <p class="post-date">{{ post.published_at|date:"d/m/Y" }}</p>
-                        <h2><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
-                        <p class="post-excerpt">{{ post.excerpt }}</p>
-                        <a class="text-link" href="{{ post.get_absolute_url }}">Leer entrada <span aria-hidden="true">→</span></a>
-                    </article>
-                {% empty %}
-                    <div class="empty-state">
-                        <span class="empty-mark">✳</span>
-                        <h2>Las historias empiezan pronto.</h2>
-                        <p>Todavía no hay entradas publicadas. ¡Volvé a visitar el blog!</p>
-                    </div>
+            <section class="category-sections" aria-label="Entradas organizadas por categoría">
+                {% for group in category_groups %}
+                    {% if group.posts %}
+                        <section class="category-section" id="categoria-{{ group.name|cut:' ' }}">
+                            <header class="category-heading">
+                                <div>
+                                    <p class="eyebrow">SECCIÓN</p>
+                                    <h2>{{ group.name|title }}</h2>
+                                </div>
+                                <span>{{ group.posts|length }} {{ group.posts|length|pluralize:"entrada,entradas" }}</span>
+                            </header>
+                            <div class="post-list">
+                                {% for post in group.posts %}
+                                    <article class="post-card">
+                                        {% if post.media_content_type|slice:":5" == "image" %}
+                                            <a class="post-image-link" href="{{ post.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+                                                <img class="post-image" src="{{ post.media.url }}" alt="" loading="lazy">
+                                            </a>
+                                        {% endif %}
+                                        <div class="post-meta">
+                                            <p class="post-date">{{ post.published_at|date:"d/m/Y" }}</p>
+                                            <span class="category-pill">{{ post.get_category_display }}</span>
+                                        </div>
+                                        <h3><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h3>
+                                        <p class="post-excerpt">{{ post.excerpt }}</p>
+                                        <div class="post-actions">
+                                            <a class="text-link" href="{{ post.get_absolute_url }}">Leer entrada <span aria-hidden="true">→</span></a>
+                                            <button
+                                                class="like-button {% if post.pk in user_post_likes %}liked{% endif %}"
+                                                type="button"
+                                                data-like-url="{% url 'blog:toggle_post_like' post.pk %}"
+                                                data-like-label="post"
+                                                {% if not user.is_authenticated %}data-require-login="true"{% endif %}
+                                            >
+                                                <span aria-hidden="true">❤️</span>
+                                                <span class="like-count">{{ post.likes.count }}</span>
+                                            </button>
+                                        </div>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    {% endif %}
                 {% endfor %}
             </section>
         {% endif %}
@@ -161,6 +230,28 @@
             const isLight = document.body.classList.contains('light-mode');
             themeIcon.classList.toggle('fa-sun', !isLight);
             themeIcon.classList.toggle('fa-moon', isLight);
+        });
+
+        document.querySelectorAll('.like-button').forEach((button) => {
+            button.addEventListener('click', async () => {
+                if (button.dataset.requireLogin === 'true') {
+                    window.location.href = '/admin/login/?next=' + encodeURIComponent(window.location.pathname);
+                    return;
+                }
+
+                const response = await fetch(button.dataset.likeUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) return;
+                const result = await response.json();
+                button.classList.toggle('liked', result.liked);
+                button.querySelector('.like-count').textContent = result.likes_count;
+            });
         });
     </script>
 </body>
