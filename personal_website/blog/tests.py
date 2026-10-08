@@ -24,15 +24,18 @@ class BlogTests(TestCase):
         response = self.client.get(reverse('portfolio:index'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'href="/blog/">Blog</a>')
+        self.assertContains(response, 'href="/blog/">Bitácora</a>')
         self.assertContains(response, 'href="/static/styles.css"')
         self.assertContains(response, 'href="/accounts/login/?next=/">')
+        self.assertContains(response, 'Iniciar sesión')
 
     def test_blog_navigation_links_to_the_portfolio_and_login(self):
         response = self.client.get(reverse('blog:index'))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'href="/accounts/login/?next=/blog/">')
+        self.assertContains(response, 'Iniciar sesión')
+        self.assertContains(response, 'Bitácora')
 
     def test_authenticated_navigation_offers_post_logout_on_both_pages(self):
         user = get_user_model().objects.create_user(
@@ -51,6 +54,7 @@ class BlogTests(TestCase):
                 self.assertContains(response, 'action="/accounts/logout/"')
                 self.assertContains(response, f'value="{next_url}"')
                 self.assertContains(response, 'name="csrfmiddlewaretoken"')
+                self.assertContains(response, 'Cerrar sesión')
 
     def test_login_authenticates_user_and_returns_to_requested_page(self):
         user = get_user_model().objects.create_user(
@@ -114,6 +118,7 @@ class BlogTests(TestCase):
         self.assertEqual(settings.MEDIA_ROOT, Path(settings.BASE_DIR) / 'blog' / 'static')
         self.assertEqual(settings.MEDIA_URL, '/media/')
         self.assertEqual(Post._meta.get_field('media').upload_to, 'img/')
+        self.assertTrue(Post._meta.get_field('media').blank)
 
     def test_index_shows_posts_in_reverse_chronological_order(self):
         older = self.create_post('Entrada vieja', 'entrada-vieja', '2026-09-01T12:00:00Z')
@@ -127,16 +132,16 @@ class BlogTests(TestCase):
 
     def test_index_groups_posts_by_category(self):
         self.create_post('Deporte', 'deporte', '2026-10-01T12:00:00Z', 'deportes')
-        self.create_post('Comida', 'comida', '2026-10-02T12:00:00Z', 'comida')
+        self.create_post('Música', 'musica', '2026-10-02T12:00:00Z', 'musica')
 
         response = self.client.get(reverse('blog:index'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(list(response.context['categories']), ['deportes', 'comida', 'desarrollo web', 'gaming'])
+        self.assertEqual(list(response.context['categories']), ['deportes', 'musica', 'desarrollo web', 'gaming'])
         self.assertContains(response, 'Deporte')
-        self.assertContains(response, 'Comida')
+        self.assertContains(response, 'Música')
         self.assertContains(response, 'id="categoria-deportes"')
-        self.assertContains(response, 'id="categoria-comida"')
+        self.assertContains(response, 'id="categoria-musica"')
 
     def test_post_category_is_required(self):
         self.assertIn('category', [field.name for field in Post._meta.fields])
@@ -144,7 +149,7 @@ class BlogTests(TestCase):
             Post._meta.get_field('category').choices,
             [
                 ('deportes', 'Deportes'),
-                ('comida', 'Comida'),
+                ('musica', 'Música'),
                 ('desarrollo web', 'Desarrollo web'),
                 ('gaming', 'Gaming'),
             ],
@@ -190,6 +195,22 @@ class BlogTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<video class="article-video" controls')
         self.assertContains(response, 'type="video/mp4"')
+
+    def test_post_can_be_created_without_media_and_detail_hides_media_controls(self):
+        post = Post.objects.create(
+            title='Entrada sin imagen',
+            slug='entrada-sin-imagen',
+            excerpt='Una entrada sin archivo multimedia',
+            content='Contenido de prueba',
+            category='musica',
+        )
+
+        response = self.client.get(post.get_absolute_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'class="post-media"')
+        self.assertNotContains(response, 'class="media-download"')
+        self.assertEqual(post.media_content_type, '')
 
     def test_only_staff_can_open_post_creation_in_admin(self):
         response = self.client.get('/admin/blog/post/add/')

@@ -1,5 +1,0 @@
-tag
-filters x temp,likes
-poder crear usuarios dentro del blog
-el hi en el portfolio
-cambiar la portada

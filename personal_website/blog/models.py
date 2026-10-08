@@ -9,7 +9,7 @@ from django.utils import timezone
 class Post(models.Model):
     CATEGORY_CHOICES = [
         ('deportes', 'Deportes'),
-        ('comida', 'Comida'),
+        ('musica', 'Música'),
         ('desarrollo web', 'Desarrollo web'),
         ('gaming', 'Gaming'),
     ]
@@ -19,7 +19,7 @@ class Post(models.Model):
     excerpt = models.CharField(max_length=300)
     content = models.TextField()
     category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
-    media = models.FileField(upload_to='img/')
+    media = models.FileField(upload_to='img/', blank=True)
     published_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
@@ -30,6 +30,8 @@ class Post(models.Model):
 
     @property
     def media_content_type(self):
+        if not self.media:
+            return ''
         return mimetypes.guess_type(self.media.name)[0] or ''
 
     def get_absolute_url(self):

@@ -1,8 +1,9 @@
-Portfolio personal y blog desarrollados con Django. La portada presenta el portfolio, el blog publica entradas cronologicas con texto y archivos multimedia, y permite que los visitantes dejen comentarios.
-La portada está en "http://127.0.0.1:8000/", el blog en "http://127.0.0.1:8000/blog/" y la administración en "http://127.0.0.1:8000/admin/".
+## Proyecto de portfolio y blog ##
+Este es portfolio personal y blog desarrollados con Django. En este subo mis avances de programacion a travez de mi transcurso en la especialidad de Computacion. Tambien esta mi blog donde es unpuedo agregar distintos posts de progresos de mis proyectos y momentos personales importantes para mi.
 
-## Administración del blog
+## Administracion del blog ##
 
-Iniciá sesión desde el portfolio o el blog para dar like; las cuentas con permisos de administrador también pueden gestionar publicaciones desde el enlace de administración o en `/admin/`. Podés cerrar sesión desde cualquiera de las dos secciones. Las publicaciones aparecen ordenadas de la más reciente a la más antigua. Los visitantes pueden comentar desde la página de cada entrada; los comentarios se moderan y eliminan desde la administración.
+Podes entrar a las distintas paginas teniendo los requerimientos que se encuentran en "requirements.txt".Tambien tenes que iniciar el servidor con el siguiente comando en la consola primero "cd personal_website" y luego "python manage.py runserver" a travez de los siguientes links: el portfolio esta en "http://127.0.0.1:8000/", el blog en "http://127.0.0.1:8000/blog/" y el admin en "http://127.0.0.1:8000/admin/".
+Inicia sesion desde el portfolio o el blog para poder dar like a los posts y comentarios. Las cuentas con permisos de administrador tambien pueden gestionar publicaciones desde el enlace de administracion. Podes cerrar sesion desde cualquiera de las dos secciones. Vos podes filtrar los posts para que te aparezcan arriba de cada categoria los mas likeados, los mas viejos y los mas nuevos. Los visitantes pueden comentar desde la pagina de cada entrada. Los comentarios se controlan y eliminan desde la administracion.
 
-Las imágenes se muestran en las tarjetas y en la entrada; los archivos de audio y video se pueden reproducir desde la página. Otros tipos de archivo quedan disponibles como descarga. Los archivos multimedia del blog se guardan en `personal_website/blog/static/img/`; el CSS del blog permanece en `personal_website/blog/static/blog/`.
+Las imágenes se muestran en las tarjetas y en la entrada de los distintos posts. Los archivos de audio y video se pueden reproducir desde la pagina.Las imagenes y videos multimendia se pueden descargar. Los archivos multimedia del blog se guardan en "personal_website/blog/static/img/"; el CSS del blog permanece en "personal_website/blog/static/blog/".

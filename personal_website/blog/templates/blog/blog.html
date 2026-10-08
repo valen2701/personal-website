@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Ideas, proyectos y experiencias de Valentin Martinez.">
-    <title>{% if post %}{{ post.title }} | Blog{% else %}Blog | Valentin Martinez{% endif %}</title>
+    <title>{% if post %}{{ post.title }} | Bitácora{% else %}Bitácora | Valentin Martinez{% endif %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
                 <div class="collapse navbar-collapse" id="blogNavigation">
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         <li class="nav-item"><a class="nav-link" href="{% url 'portfolio:index' %}">Portfolio</a></li>
-                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'blog:index' %}">Blog</a></li>
+                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'blog:index' %}">Bitácora</a></li>
                         <li class="nav-item auth-nav-item">
                             {% if user.is_authenticated %}
                                 <form class="auth-logout-form" method="post" action="{% url 'logout' %}">
@@ -39,13 +39,13 @@
                                     <span class="auth-user">Hola, {{ user.get_username }}</span>
                                     <button class="auth-link" type="submit">
                                         <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
-                                        Cerrar sesion
+                                        Cerrar sesión
                                     </button>
                                 </form>
                             {% else %}
                                 <a class="auth-link" href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">
                                     <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
-                                    Iniciar sesion
+                                    Iniciar sesión
                                 </a>
                             {% endif %}
                         </li>
@@ -79,6 +79,7 @@
                     </div>
                 </header>
                 <div class="article-body">{{ post.content|linebreaks }}</div>
+                {% if post.media %}
                 <div class="post-media">
                     {% if post.media_content_type|slice:":5" == "image" %}
                         <figure>
@@ -104,6 +105,7 @@
                     {% endif %}
                     <a class="media-download" href="{{ post.media.url }}" download>Descargar archivo</a>
                 </div>
+                {% endif %}
             </article>
 
             <section class="comments" id="comentarios">
@@ -166,7 +168,7 @@
         {% else %}
             <section class="intro">
                 <p class="eyebrow">IDEAS, PROYECTOS FUTUROS (y otras cosas)</p>
-                <h1>Mi blog</h1>
+                <h1>Mi bitácora</h1>
                 <p class="intro-copy">Aca muestro lo que voy aprendiendo, creando y mis experiencias .</p>
                 {% if user.is_superuser %}
                     <div class="admin-notice">
