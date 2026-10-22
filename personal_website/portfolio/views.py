@@ -2,6 +2,7 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 
 
 def index(request):
@@ -9,7 +10,17 @@ def index(request):
 
 
 def login_view(request):
-    next_url = request.POST.get('next') or request.GET.get('next') or reverse('portfolio:index')
+    requested_next = request.POST.get('next') or request.GET.get('next')
+    next_url = (
+        requested_next
+        if requested_next
+        and url_has_allowed_host_and_scheme(
+            requested_next,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        )
+        else reverse('portfolio:index')
+    )
     form = AuthenticationForm(request, data=request.POST or None)
 
     if request.method == 'POST':

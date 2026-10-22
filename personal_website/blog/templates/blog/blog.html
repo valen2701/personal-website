@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Ideas, proyectos y experiencias de Valentin Martinez.">
-    <title>{% if post %}{{ post.title }} | Bitácora{% else %}Bitácora | Valentin Martinez{% endif %}</title>
+    <title>{% if post %}{{ post.title }} | Blog{% else %}Blog | Valentin Martinez{% endif %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
                 <div class="collapse navbar-collapse" id="blogNavigation">
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         <li class="nav-item"><a class="nav-link" href="{% url 'portfolio:index' %}">Portfolio</a></li>
-                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'blog:index' %}">Bitácora</a></li>
+                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'blog:index' %}">Blog</a></li>
                         <li class="nav-item auth-nav-item">
                             {% if user.is_authenticated %}
                                 <form class="auth-logout-form" method="post" action="{% url 'logout' %}">
@@ -168,7 +168,7 @@
         {% else %}
             <section class="intro">
                 <p class="eyebrow">IDEAS, PROYECTOS FUTUROS (y otras cosas)</p>
-                <h1>Mi bitácora</h1>
+                <h1>Mi blog</h1>
                 <p class="intro-copy">Aca muestro lo que voy aprendiendo, creando y mis experiencias .</p>
                 {% if user.is_superuser %}
                     <div class="admin-notice">
@@ -247,12 +247,21 @@
     <script>
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = themeToggle.querySelector('i');
+        const themeStorageKey = 'personal-website-theme';
+
+        if (localStorage.getItem(themeStorageKey) === 'light') {
+            document.body.classList.add('light-mode');
+        }
+        const isLight = document.body.classList.contains('light-mode');
+        themeIcon.classList.toggle('fa-sun', !isLight);
+        themeIcon.classList.toggle('fa-moon', isLight);
 
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
-            const isLight = document.body.classList.contains('light-mode');
-            themeIcon.classList.toggle('fa-sun', !isLight);
-            themeIcon.classList.toggle('fa-moon', isLight);
+            const isLightMode = document.body.classList.contains('light-mode');
+            localStorage.setItem(themeStorageKey, isLightMode ? 'light' : 'dark');
+            themeIcon.classList.toggle('fa-sun', !isLightMode);
+            themeIcon.classList.toggle('fa-moon', isLightMode);
         });
 
         document.querySelectorAll('.like-button').forEach((button) => {

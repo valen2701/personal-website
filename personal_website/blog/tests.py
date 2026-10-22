@@ -24,7 +24,7 @@ class BlogTests(TestCase):
         response = self.client.get(reverse('portfolio:index'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'href="/blog/">Bitácora</a>')
+        self.assertContains(response, 'href="/blog/">Blog</a>')
         self.assertContains(response, 'href="/static/styles.css"')
         self.assertContains(response, 'href="/accounts/login/?next=/">')
         self.assertContains(response, 'Iniciar sesión')
@@ -35,7 +35,7 @@ class BlogTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'href="/accounts/login/?next=/blog/">')
         self.assertContains(response, 'Iniciar sesión')
-        self.assertContains(response, 'Bitácora')
+        self.assertContains(response, 'Blog')
 
     def test_authenticated_navigation_offers_post_logout_on_both_pages(self):
         user = get_user_model().objects.create_user(
@@ -69,6 +69,22 @@ class BlogTests(TestCase):
 
         self.assertRedirects(response, '/blog/')
         self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
+
+    def test_login_back_link_returns_to_requested_page(self):
+        response = self.client.get(reverse('login'), {'next': '/blog/'})
+
+        self.assertContains(response, 'class="auth-back" href="/blog/">← Volver</a>')
+
+    def test_login_restores_saved_color_theme(self):
+        response = self.client.get(reverse('login'))
+
+        self.assertContains(response, "localStorage.getItem('personal-website-theme')")
+        self.assertContains(response, "document.body.classList.add('light-mode')")
+
+    def test_login_back_link_uses_portfolio_for_external_return_url(self):
+        response = self.client.get(reverse('login'), {'next': 'https://example.com/'})
+
+        self.assertContains(response, 'class="auth-back" href="/">← Volver</a>')
 
     def test_login_creates_a_new_user_when_it_does_not_exist(self):
         response = self.client.post(
