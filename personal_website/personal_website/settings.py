@@ -16,6 +16,10 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Ruta donde se recolectarán los archivos para producción
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# URL pública para acceder a estos archivos en el navegador
+STATIC_URL = '/static/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
@@ -131,7 +135,3 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
-# Ruta donde se recolectarán los archivos para producción 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
-# URL pública para acceder a estos archivos en el navegador 
-STATIC_URL = '/static/'
